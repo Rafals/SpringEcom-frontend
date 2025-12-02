@@ -3,22 +3,24 @@ import { useContext, useEffect } from "react";
 import { useState } from "react";
 import AppContext from "../Context/Context";
 import axios from "../axios";
-import UpdateProduct from "./UpdateProduct";
+import { toast } from "react-toastify";
+
 const Product = () => {
   const { id } = useParams();
-  const { data, addToCart, removeFromCart, cart, refreshData } =
-    useContext(AppContext);
+  const { data, addToCart, removeFromCart, cart, refreshData } = useContext(AppContext);
   const [product, setProduct] = useState(null);
   const [imageUrl, setImageUrl] = useState("");
   const navigate = useNavigate();
+  const baseUrl = import.meta.env.VITE_BASE_URL;
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8080/api/product/${id}`
+          `${baseUrl}/api/product/${id}`
         );
         setProduct(response.data);
+        console.log(response.data);
         if (response.data.imageName) {
           fetchImage();
         }
@@ -29,21 +31,20 @@ const Product = () => {
 
     const fetchImage = async () => {
       const response = await axios.get(
-        `http://localhost:8080/api/product/${id}/image`,
+        `${baseUrl}/api/product/${id}/image`,
         { responseType: "blob" }
       );
       setImageUrl(URL.createObjectURL(response.data));
     };
-
     fetchProduct();
   }, [id]);
 
   const deleteProduct = async () => {
     try {
-      await axios.delete(`http://localhost:8080/api/product/${id}`);
+      await axios.delete(`${baseUrl}/api/product/${id}`);
       removeFromCart(id);
       console.log("Product deleted successfully");
-      alert("Product deleted successfully");
+      toast.success("Product deleted successfully");
       refreshData();
       navigate("/");
     } catch (error) {
@@ -57,116 +58,92 @@ const Product = () => {
 
   const handlAddToCart = () => {
     addToCart(product);
-    alert("Product added to cart");
+    toast.success("Product added to cart");
   };
+
   if (!product) {
     return (
-      <h2 className="text-center" style={{ padding: "10rem" }}>
-        Loading...
-      </h2>
+      <div className="container mt-5 pt-5">
+        <div className="d-flex justify-content-center align-items-center" style={{ height: "400px" }}>
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
     );
   }
+
   return (
-    <>
-      <div className="containers" style={{ display: "flex" }}>
-        <img
-          className="left-column-img"
-          src={imageUrl}
-          alt={product.imageName}
-          style={{ width: "50%", height: "auto" }}
-        />
+    <div className="container mt-5 pt-5">
+      <div className="row">
+        {/* Product Image */}
+        <div className="col-md-6 mb-4">
+          <div className="card border-0">
+            <img
+              src={imageUrl}
+              alt={product.name}
+              className="card-img-top img-fluid"
+              style={{ maxHeight: "500px", objectFit: "contain" }}
+            />
+          </div>
+        </div>
 
-        <div className="right-column" style={{ width: "50%" }}>
-          <div className="product-description">
-            <div style={{display:'flex',justifyContent:'space-between' }}>
-            <span style={{ fontSize: "1.2rem", fontWeight: 'lighter' }}>
-              {product.category}
-            </span>
-            <p className="release-date" style={{ marginBottom: "2rem" }}>
-              
-              <h6>Listed : <span> <i> {new Date(product.releaseDate).toLocaleDateString()}</i></span></h6>
-              {/* <i> {new Date(product.releaseDate).toLocaleDateString()}</i> */}
-            </p>
-            </div>
-            
-           
-            <h1 style={{ fontSize: "2rem", marginBottom: "0.5rem",textTransform: 'capitalize', letterSpacing:'1px' }}>
-              {product.name}
-            </h1>
-            <i style={{ marginBottom: "3rem" }}>{product.brand}</i>
-            <p style={{fontWeight:'bold',fontSize:'1rem',margin:'10px 0px 0px'}}>PRODUCT DESCRIPTION :</p>
-            <p style={{ marginBottom: "1rem" }}>{product.description}</p>
+        {/* Product Details */}
+        <div className="col-md-6">
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <span className="badge bg-secondary">{product.category}</span>
+            <small className="text-muted">
+              Listed: {new Date(product.releaseDate).toLocaleDateString()}
+            </small>
           </div>
 
-          <div className="product-price">
-            <span style={{ fontSize: "2rem", fontWeight: "bold" }}>
-              {"$" + product.price}
-            </span>
+          <h2 className="text-capitalize mb-1">{product.name}</h2>
+          <p className="text-muted fst-italic mb-4">~ {product.brand}</p>
+
+          <div className="mb-4">
+            <h5 className="mb-2">Product Description:</h5>
+            <p>{product.description}</p>
+          </div>
+
+          <h3 className="fw-bold mb-3">₹ {product.price}</h3>
+
+          <div className="d-grid gap-2 mb-3">
             <button
-              className={`cart-btn ${
-                !product.productAvailable ? "disabled-btn" : ""
-              }`}
+              className="btn btn-primary btn-lg"
               onClick={handlAddToCart}
-              disabled={!product.productAvailable}
-              style={{
-                padding: "1rem 2rem",
-                fontSize: "1rem",
-                backgroundColor: "#007bff",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-                marginBottom: "1rem",
-              }}
+              disabled={!product.productAvailable || product.stockQuantity == 0}
             >
-              {product.productAvailable ? "Add to cart" : "Out of Stock"}
+              {product.stockQuantity !== 0 ? "Add to Cart" : "Out of Stock"}
             </button>
-            <h6 style={{ marginBottom: "1rem" }}>
-              Stock Available :{" "}
-              <i style={{ color: "green", fontWeight: "bold" }}>
-                {product.stockQuantity}
-              </i>
-            </h6>
-          
           </div>
-          <div className="update-button" style={{ display: "flex", gap: "1rem" }}>
+
+          <p className="mb-4">
+            <span className="me-2">Stock Available:</span>
+            <span className="fw-bold text-success">{product.stockQuantity}</span>
+          </p>
+
+          <div className="d-flex gap-2">
             <button
-              className="btn btn-primary"
+              className="btn btn-outline-primary"
               type="button"
               onClick={handleEditClick}
-              style={{
-                padding: "1rem 2rem",
-                fontSize: "1rem",
-                backgroundColor: "#007bff",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-              }}
             >
+              <i className="bi bi-pencil me-1"></i>
               Update
             </button>
-            {/* <UpdateProduct product={product} onUpdate={handleUpdate} /> */}
+
             <button
-              className="btn btn-primary"
+              className="btn btn-outline-danger"
               type="button"
               onClick={deleteProduct}
-              style={{
-                padding: "1rem 2rem",
-                fontSize: "1rem",
-                backgroundColor: "#dc3545",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-              }}
             >
+              <i className="bi bi-trash me-1"></i>
               Delete
             </button>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

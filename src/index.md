@@ -4,5 +4,5 @@
         --root_background: white;
     }
 :root{
-    background-color: #1f1f1f;
+    background-color: white;
 }

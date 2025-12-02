@@ -46,7 +46,8 @@
 
 #root {
   max-width: 100%;
-  max-height: 100%;
+  /* max-height: 100vh; */
+  height: 100%;
   margin: 0 auto;
   background-color: var(--root_background) !important;
 }  
@@ -467,6 +468,7 @@ padding-top: 100px;
   border-radius: 6px;
   display: flex;
   flex-direction: column;
+  /* overflow-y: scroll !important; */
   /* width: 100vh;
   height: 100vh; */
 }
@@ -709,8 +711,12 @@ input:focus {
 
 .cart-container {
   width: 100%;
-  height: 100%;
+  height: auto;
   background-color: var(--body_background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* overflow-y: scroll; */
 }
 
 .checkout-button {
@@ -742,7 +748,8 @@ input:focus {
 .update-product-container {
   background-color: var(--body_background);
   width: 100%;
-  min-height: 150vh;
+  height: 100vh;
+  /* min-height: 100vh; */
   box-sizing: border-box; 
 }
 /* <...............................Button...............................> */
