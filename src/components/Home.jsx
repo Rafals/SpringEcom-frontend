@@ -74,7 +74,7 @@ const Home = ({ selectedCategory }) => {
     <>
       {/* Toast Notification */}
       <div className="position-fixed top-0 end-0 p-3" style={{ zIndex: 1050 }}>
-        <div 
+        <div
           className={`toast ${showToast ? 'show' : 'hide'}`}
           role="alert" 
           aria-live="assertive" 
@@ -141,7 +141,7 @@ const Home = ({ selectedCategory }) => {
                         <hr />
                         <div className="mt-auto">
                           <h5 className="mb-2 fw-bold">
-                            <i className="bi bi-currency-rupee"></i>{price}
+                            <i className="bi bi-currency-dollar"></i>{price}
                           </h5>
                           <button
                             className="btn btn-primary w-100"

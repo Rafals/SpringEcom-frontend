@@ -14,6 +14,7 @@ import SearchResults from "./components/SearchResults";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { ToastContainer } from "react-toastify";
+import Login from "./components/Login.jsx";
 
 function App() {
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -44,7 +45,8 @@ function App() {
             <Route path="/product/update/:id" element={<UpdateProduct />} />
             <Route path="/orders" element={<Order />} />
             <Route path="/search-results" element={<SearchResults />} />
-             
+              <Route path="/login" element={<Login />} />
+
           </Routes>
         </div>
       </BrowserRouter>

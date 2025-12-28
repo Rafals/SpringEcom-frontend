@@ -4,10 +4,11 @@ import axios from "axios";
 
 const Navbar = ({ onSelectCategory }) => {
   const getInitialTheme = () => {
-    const storedTheme = localStorage.getItem("theme");
-    return storedTheme ? storedTheme : "light-theme";
+      const storedTheme = localStorage.getItem("theme");
+      // Bootstrap używa wartości "light" lub "dark"
+      return storedTheme ? storedTheme : "light";
   };
-  
+
   const [selectedCategory, setSelectedCategory] = useState("");
   const [theme, setTheme] = useState(getInitialTheme());
   const [input, setInput] = useState("");
@@ -21,13 +22,14 @@ const Navbar = ({ onSelectCategory }) => {
   // 2. Add these new state variables
 const [isNavCollapsed, setIsNavCollapsed] = useState(true);
 const navbarRef = useRef(null);
-  
+
   const navigate = useNavigate();
   const baseUrl = import.meta.env.VITE_BASE_URL;
 
   useEffect(() => {
     fetchInitialData();
   }, []);
+
 
   // 3. Add this to your useEffect or as a separate useEffect
 useEffect(() => {
@@ -37,10 +39,10 @@ useEffect(() => {
       setIsNavCollapsed(true);
     }
   };
-  
+
   // Add event listener to document when component mounts
   document.addEventListener("mousedown", handleClickOutside);
-  
+
   // Clean up event listener on component unmount
   return () => {
     document.removeEventListener("mousedown", handleClickOutside);
@@ -76,19 +78,19 @@ const handleLinkClick = () => {
   // Only search when the form is submitted
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (input.trim() === "") return;
-    
+
     setShowNoProductsMessage(false);
     setIsLoading(true);
     setIsNavCollapsed(true);
-    
+
     try {
       const response = await axios.get(
         `${baseUrl}/api/products/search?keyword=${input}`
       );
       setSearchResults(response.data);
-      
+
       if (response.data.length === 0) {
         setNoResults(true);
         setShowNoProductsMessage(true);
@@ -96,7 +98,7 @@ const handleLinkClick = () => {
         // Redirect to search results page with the search data
         navigate(`/search-results`, { state: { searchData: response.data } });
       }
-      
+
       console.log("Search results:", response.data);
     } catch (error) {
       console.error("Error searching:", error);
@@ -111,7 +113,7 @@ const handleLinkClick = () => {
     onSelectCategory(category);
     setIsNavCollapsed(true);
   };
-  
+
   const toggleTheme = () => {
     const newTheme = theme === "dark-theme" ? "light-theme" : "dark-theme";
     setTheme(newTheme);
@@ -130,12 +132,12 @@ const handleLinkClick = () => {
     "Toys",
     "Fashion",
   ];
-  
+
   return (
     <nav className="navbar navbar-expand-lg fixed-top bg-white shadow-sm" ref={navbarRef}>
       <div className="container-fluid">
-        <a className="navbar-brand" href="https://telusko.com/">
-          Telusko
+        <a className="navbar-brand" href="https://github.com/rafals">
+          Github
         </a>
         <button
   className="navbar-toggler"
@@ -168,13 +170,38 @@ const handleLinkClick = () => {
                 Orders
               </a>
             </li>
-      
+
 
           </ul>
-          
-         
-          
+
+
+
           <div className="d-flex align-items-center">
+              {/* Przycisk zmiany motywu */}
+              <button
+                  className="btn btn-link nav-link text-dark me-2"
+                  onClick={toggleTheme}
+                  title="Toggle dark/light mode"
+                  style={{ fontSize: "1.2rem", padding: "0" }}
+              >
+                  {theme === "light-theme" ? (
+                      <i className="bi bi-moon-stars-fill text-dark"></i>
+                  ) : (
+                      <i className="bi bi-sun-fill text-warning"></i>
+                  )}
+              </button>
+
+              {/* Przycisk Logowania / Rejestracji */}
+              <button
+                  className="btn btn-outline-primary me-3 d-flex align-items-center"
+                  onClick={() => {
+                      handleLinkClick();
+                      navigate("/login"); // Przekierowanie do formularza
+                  }}
+              >
+                  <i className="bi bi-person-circle me-1"></i>
+                  Sign In
+              </button>
             <a href="/cart" className="nav-link text-dark me-3" onClick={handleLinkClick}>
               <i className="bi bi-cart me-1"></i>
               Cart
@@ -206,11 +233,12 @@ const handleLinkClick = () => {
                 </button>
               )}
             </form>
-            
+
             {showNoProductsMessage && (
               <div className="alert alert-warning position-absolute mt-2" style={{ top: "100%", zIndex: 1000 }}>
                 No products found matching your search.
               </div>
+
             )}
           </div>
         </div>
