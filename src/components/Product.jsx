@@ -6,145 +6,161 @@ import axios from "../axios";
 import { toast } from "react-toastify";
 
 const Product = () => {
-  const { id } = useParams();
-  const { data, addToCart, removeFromCart, cart, refreshData } = useContext(AppContext);
-  const [product, setProduct] = useState(null);
-  const [imageUrl, setImageUrl] = useState("");
-  const navigate = useNavigate();
-  const baseUrl = import.meta.env.VITE_BASE_URL;
+    const { id } = useParams();
+    const { addToCart, removeFromCart, refreshData } = useContext(AppContext);
+    const [product, setProduct] = useState(null);
+    const [imageUrl, setImageUrl] = useState("");
+    const navigate = useNavigate();
+    const baseUrl = import.meta.env.VITE_BASE_URL;
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const response = await axios.get(
-          `${baseUrl}/api/product/${id}`
-        );
-        setProduct(response.data);
-        console.log(response.data);
-        if (response.data.imageName) {
-          fetchImage();
+    // POBIERANIE DANYCH O TYPIE UŻYTKOWNIKA
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+
+    useEffect(() => {
+        const fetchProduct = async () => {
+            try {
+                const response = await axios.get(
+                    `${baseUrl}/api/product/${id}`
+                );
+                setProduct(response.data);
+                if (response.data.imageName) {
+                    fetchImage();
+                }
+            } catch (error) {
+                console.error("Error fetching product:", error);
+            }
+        };
+
+        const fetchImage = async () => {
+            try {
+                const response = await axios.get(
+                    `${baseUrl}/api/product/${id}/image`,
+                    { responseType: "blob" }
+                );
+                setImageUrl(URL.createObjectURL(response.data));
+            } catch (error) {
+                console.error("Error fetching image:", error);
+            }
+        };
+        fetchProduct();
+    }, [id, baseUrl]);
+
+    const deleteProduct = async () => {
+        try {
+            // Przy usuwaniu warto dodać token do nagłówka (jeśli nie masz tego w axios.js)
+            await axios.delete(`${baseUrl}/api/product/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            removeFromCart(id);
+            toast.success("Product deleted successfully");
+            refreshData();
+            navigate("/");
+        } catch (error) {
+            toast.error("Error deleting product");
+            console.error("Error deleting product:", error);
         }
-      } catch (error) {
-        console.error("Error fetching product:", error);
-      }
     };
 
-    const fetchImage = async () => {
-      const response = await axios.get(
-        `${baseUrl}/api/product/${id}/image`,
-        { responseType: "blob" }
-      );
-      setImageUrl(URL.createObjectURL(response.data));
+    const handleEditClick = () => {
+        navigate(`/product/update/${id}`);
     };
-    fetchProduct();
-  }, [id]);
 
-  const deleteProduct = async () => {
-    try {
-      await axios.delete(`${baseUrl}/api/product/${id}`);
-      removeFromCart(id);
-      console.log("Product deleted successfully");
-      toast.success("Product deleted successfully");
-      refreshData();
-      navigate("/");
-    } catch (error) {
-      console.error("Error deleting product:", error);
+    const handlAddToCart = () => {
+        // SPRAWDZENIE CZY UŻYTKOWNIK JEST ZALOGOWANY
+        if (!token) {
+            toast.info("Please login to add products to cart");
+            navigate("/login");
+            return;
+        }
+
+        addToCart(product);
+        toast.success("Product added to cart");
+    };
+
+    if (!product) {
+        return (
+            <div className="container mt-5 pt-5 text-center">
+                <div className="spinner-border text-primary" role="status"></div>
+            </div>
+        );
     }
-  };
 
-  const handleEditClick = () => {
-    navigate(`/product/update/${id}`);
-  };
-
-  const handlAddToCart = () => {
-    addToCart(product);
-    toast.success("Product added to cart");
-  };
-
-  if (!product) {
     return (
-      <div className="container mt-5 pt-5">
-        <div className="d-flex justify-content-center align-items-center" style={{ height: "400px" }}>
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
+        <div className="container mt-5 pt-5">
+            <div className="row">
+                <div className="col-md-6 mb-4 text-center">
+                    <div className="card border-0 shadow-sm p-3 bg-body-tertiary">
+                        <img
+                            src={imageUrl || "https://via.placeholder.com/400"}
+                            alt={product.name}
+                            className="img-fluid rounded"
+                            style={{ maxHeight: "450px", objectFit: "contain" }}
+                        />
+                    </div>
+                </div>
+
+                <div className="col-md-6">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                        <span className="badge bg-primary px-3 py-2">{product.category}</span>
+                        <small className="text-muted">
+                            Listed: {new Date(product.releaseDate).toLocaleDateString()}
+                        </small>
+                    </div>
+
+                    <h1 className="fw-bold mb-1">{product.name}</h1>
+                    <p className="text-muted fs-5">Brand: {product.brand}</p>
+
+                    <div className="my-4">
+                        <h5 className="fw-bold">Description:</h5>
+                        <p className="text-secondary">{product.description}</p>
+                    </div>
+
+                    <h2 className="text-primary fw-bold mb-4">$ {product.price}</h2>
+
+                    <div className="d-grid gap-2 mb-4">
+                        <button
+                            className="btn btn-primary btn-lg fw-bold py-3"
+                            onClick={handlAddToCart}
+                            disabled={!product.productAvailable || product.stockQuantity === 0}
+                        >
+                            {product.stockQuantity !== 0 ? (
+                                <><i className="bi bi-cart-plus me-2"></i>Add to Cart</>
+                            ) : (
+                                "Out of Stock"
+                            )}
+                        </button>
+                    </div>
+
+                    <p className="mb-4">
+                        Status: {product.stockQuantity > 0 ? (
+                        <span className="badge bg-success">In Stock ({product.stockQuantity})</span>
+                    ) : (
+                        <span className="badge bg-danger">Unavailable</span>
+                    )}
+                    </p>
+
+                    {/* PRZYCISKI ADMINISTRATORA - WIDOCZNE TYLKO DLA ROLE_ADMIN */}
+                    {role === "ROLE_ADMIN" && (
+                        <div className="border-top pt-4 mt-2">
+                            <h6 className="text-uppercase fw-bold text-muted mb-3 small">Admin Actions</h6>
+                            <div className="d-flex gap-3">
+                                <button className="btn btn-warning flex-fill fw-bold" onClick={handleEditClick}>
+                                    <i className="bi bi-pencil-square me-2"></i>Update
+                                </button>
+
+                                <button className="btn btn-danger flex-fill fw-bold" onClick={() => {
+                                    if(window.confirm("Are you sure?")) deleteProduct();
+                                }}>
+                                    <i className="bi bi-trash3 me-2"></i>Delete
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
-      </div>
     );
-  }
-
-  return (
-    <div className="container mt-5 pt-5">
-      <div className="row">
-        {/* Product Image */}
-        <div className="col-md-6 mb-4">
-          <div className="card border-0">
-            <img
-              src={imageUrl}
-              alt={product.name}
-              className="card-img-top img-fluid"
-              style={{ maxHeight: "500px", objectFit: "contain" }}
-            />
-          </div>
-        </div>
-
-        {/* Product Details */}
-        <div className="col-md-6">
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <span className="badge bg-secondary">{product.category}</span>
-            <small className="text-muted">
-              Listed: {new Date(product.releaseDate).toLocaleDateString()}
-            </small>
-          </div>
-
-          <h2 className="text-capitalize mb-1">{product.name}</h2>
-          <p className="text-muted fst-italic mb-4">~ {product.brand}</p>
-
-          <div className="mb-4">
-            <h5 className="mb-2">Product Description:</h5>
-            <p>{product.description}</p>
-          </div>
-
-          <h3 className="fw-bold mb-3">$ {product.price}</h3>
-
-          <div className="d-grid gap-2 mb-3">
-            <button
-              className="btn btn-primary btn-lg"
-              onClick={handlAddToCart}
-              disabled={!product.productAvailable || product.stockQuantity == 0}
-            >
-              {product.stockQuantity !== 0 ? "Add to Cart" : "Out of Stock"}
-            </button>
-          </div>
-
-          <p className="mb-4">
-            <span className="me-2">Stock Available:</span>
-            <span className="fw-bold text-success">{product.stockQuantity}</span>
-          </p>
-
-          <div className="d-flex gap-2">
-            <button
-              className="btn btn-outline-primary"
-              type="button"
-              onClick={handleEditClick}
-            >
-              <i className="bi bi-pencil me-1"></i>
-              Update
-            </button>
-
-            <button
-              className="btn btn-outline-danger"
-              type="button"
-              onClick={deleteProduct}
-            >
-              <i className="bi bi-trash me-1"></i>
-              Delete
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 };
 
 export default Product;
