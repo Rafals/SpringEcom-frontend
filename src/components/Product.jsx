@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 
 const Product = () => {
     const { id } = useParams();
-    const { addToCart, removeFromCart, refreshData } = useContext(AppContext);
+    const { addToCart, removeFromCart, refreshData, fetchCart } = useContext(AppContext);
     const [product, setProduct] = useState(null);
     const [imageUrl, setImageUrl] = useState("");
     const navigate = useNavigate();
@@ -66,16 +66,25 @@ const Product = () => {
         navigate(`/product/update/${id}`);
     };
 
-    const handlAddToCart = () => {
-        // SPRAWDZENIE CZY UŻYTKOWNIK JEST ZALOGOWANY
-        if (!token) {
+    // Product.jsx
+    const handlAddToCart = async () => {
+        const currentToken = localStorage.getItem("token"); // Pobierz świeży token
+
+        if (!currentToken || currentToken === "null") {
             toast.info("Please login to add products to cart");
             navigate("/login");
             return;
         }
 
-        addToCart(product);
-        toast.success("Product added to cart");
+        try {
+            await axios.post(`${baseUrl}/api/cart/add/${product.id}`, {}, {
+                headers: { Authorization: `Bearer ${currentToken}` }
+            });
+            fetchCart();
+            toast.success("Product saved in your account cart!");
+        } catch (error) {
+            toast.error("Could not sync cart with server");
+        }
     };
 
     if (!product) {
