@@ -15,6 +15,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { ToastContainer } from "react-toastify";
 import Login from "./components/Login.jsx";
+import Checkout from "./components/Checkout.jsx";
 
 function App() {
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -46,6 +47,7 @@ function App() {
             <Route path="/orders" element={<Order />} />
             <Route path="/search-results" element={<SearchResults />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/checkout" element={<Checkout />} />
 
           </Routes>
         </div>

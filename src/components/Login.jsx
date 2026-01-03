@@ -1,7 +1,8 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../axios"; // Używamy Twojej instancji axios z interceptorem!
 import ReCAPTCHA from "react-google-recaptcha";
+import { GoogleLogin } from "@react-oauth/google";
 
 const Login = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -17,9 +18,9 @@ const Login = () => {
 
     const navigate = useNavigate();
     const recaptchaRef = useRef();
-    const baseUrl = import.meta.env.VITE_BASE_URL;
 
-    const recaptchaSiteKey = "6Lf6KT8sAAAAANzR-NjR05Q2EXdj_Wt4vCxigjON";
+    // Pamiętaj: To musi być klucz typu "Checkbox" (v2), a nie "Score" (v3)
+    const recaptchaSiteKey = "6LefSj8sAAAAAI91pZgzDalA1ZDAOmPvyT0rzliU";
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -29,6 +30,40 @@ const Login = () => {
         setCaptchaToken(token);
     };
 
+    // --- LOGOWANIE GOOGLE ---
+    const handleGoogleSuccess = async (credentialResponse) => {
+        setLoading(true);
+        setError("");
+
+        try {
+            console.log("Wysyłam token Google do backendu...");
+            // Wysyłamy token do backendu
+            const response = await axios.post("/auth/google", {
+                token: credentialResponse.credential
+            });
+
+            // Backend zwrócił nasz JWT - zapisujemy go
+            if (response.data.token) {
+                localStorage.setItem("token", response.data.token);
+                localStorage.setItem("username", response.data.username);
+                localStorage.setItem("role", response.data.role);
+
+                navigate("/");
+                window.location.reload();
+            }
+        } catch (err) {
+            console.error("Google Login Error:", err);
+            setError("Google login failed. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleError = () => {
+        setError("Google Sign In was unsuccessful.");
+    };
+
+    // --- STANDARDOWE LOGOWANIE ---
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -46,7 +81,7 @@ const Login = () => {
             return;
         }
 
-        const endpoint = isLogin ? "/api/auth/login" : "/api/auth/register";
+        const endpoint = isLogin ? "/auth/login" : "/auth/register";
 
         const payload = isLogin
             ? {
@@ -62,7 +97,7 @@ const Login = () => {
             };
 
         try {
-            const response = await axios.post(`${baseUrl}${endpoint}`, payload);
+            const response = await axios.post(endpoint, payload);
 
             if (response.status === 200 || response.status === 201) {
                 if (isLogin) {
@@ -70,15 +105,15 @@ const Login = () => {
                     localStorage.setItem("username", response.data.username);
                     localStorage.setItem("role", response.data.role);
                 }
-
                 navigate("/");
                 window.location.reload();
             }
         } catch (err) {
             setError(err.response?.data?.message || "Action failed. Please try again.");
-            // Resetuj captcha w razie błędu logowania
             setCaptchaToken(null);
-            recaptchaRef.current.reset();
+            if (recaptchaRef.current) {
+                recaptchaRef.current.reset();
+            }
         } finally {
             setLoading(false);
         }
@@ -129,6 +164,23 @@ const Login = () => {
                         {loading ? <span className="spinner-border spinner-border-sm"></span> : (isLogin ? "Login" : "Sign Up")}
                     </button>
                 </form>
+
+                <div className="d-flex align-items-center my-3">
+                    <hr className="flex-grow-1" />
+                    <span className="mx-2 text-muted small">OR</span>
+                    <hr className="flex-grow-1" />
+                </div>
+
+                <div className="d-flex justify-content-center mb-3">
+                    <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={handleGoogleError}
+                        theme="filled_blue"
+                        shape="pill"
+                        text={isLogin ? "signin_with" : "signup_with"}
+                        width="300"
+                    />
+                </div>
 
                 <div className="text-center">
                     <span className="text-muted small">{isLogin ? "Don't have an account? " : "Already have an account? "}</span>

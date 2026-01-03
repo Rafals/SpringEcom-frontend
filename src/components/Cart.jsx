@@ -1,14 +1,14 @@
 import React, { useContext, useState, useEffect } from "react";
 import AppContext from "../Context/Context";
-import CheckoutPopup from "./CheckoutPopup";
 import { Button } from 'react-bootstrap';
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const Cart = () => {
-    // Pobieramy wszystko z Contextu - teraz to serwer zarządza stanem
-    const { cart, removeFromCart, addToCart, clearCart } = useContext(AppContext);
+    // Wyciągamy niezbędne funkcje z Contextu
+    const { cart, addToCart, removeFromCart } = useContext(AppContext);
     const [totalPrice, setTotalPrice] = useState(0);
-    const [showModal, setShowModal] = useState(false);
+    const navigate = useNavigate();
 
     // Kalkulacja sumy za każdym razem, gdy koszyk w Contextie się zmieni
     useEffect(() => {
@@ -31,7 +31,6 @@ const Cart = () => {
     // Zwiększanie ilości - wysyła zapytanie do bazy przez Context
     const handleIncreaseQuantity = (item) => {
         if (item.quantity < item.stockQuantity) {
-            // Dodajemy 1 sztukę do bazy
             addToCart(item, 1);
         } else {
             toast.info("Cannot add more than available stock");
@@ -41,7 +40,6 @@ const Cart = () => {
     // Zmniejszanie ilości - wysyła zapytanie do bazy przez Context
     const handleDecreaseQuantity = (item) => {
         if (item.quantity > 1) {
-            // "Dodajemy" -1 sztukę, co w bazie zmniejszy licznik
             addToCart(item, -1);
         }
     };
@@ -52,11 +50,13 @@ const Cart = () => {
         }
     };
 
-    // Logika po udanym zamówieniu w popupie
-    const onCheckoutSuccess = () => {
-        clearCart(); // Czyścimy lokalny stan
-        setShowModal(false);
-        toast.success("Order placed successfully!");
+    // Funkcja kierująca do nowej strony Checkout zamiast otwierania popupu
+    const handleGoToCheckout = () => {
+        if (cart.length === 0) {
+            toast.warn("Your cart is empty!");
+            return;
+        }
+        navigate("/checkout");
     };
 
     return (
@@ -73,7 +73,9 @@ const Cart = () => {
                                     <i className="bi bi-cart-x fs-1 text-muted"></i>
                                     <h5 className="mt-3">Your cart is empty</h5>
                                     <p className="text-muted">Looks like you haven't added anything yet.</p>
-                                    <a href="/" className="btn btn-primary px-4 mt-2">Start Shopping</a>
+                                    <button onClick={() => navigate("/")} className="btn btn-primary px-4 mt-2">
+                                        Start Shopping
+                                    </button>
                                 </div>
                             ) : (
                                 <>
@@ -141,7 +143,12 @@ const Cart = () => {
                                     </div>
 
                                     <div className="d-grid mt-4">
-                                        <Button variant="primary" size="lg" className="fw-bold py-3" onClick={() => setShowModal(true)}>
+                                        <Button
+                                            variant="primary"
+                                            size="lg"
+                                            className="fw-bold py-3"
+                                            onClick={handleGoToCheckout} // Nawigacja do /checkout
+                                        >
                                             Proceed to Checkout
                                         </Button>
                                     </div>
@@ -151,15 +158,6 @@ const Cart = () => {
                     </div>
                 </div>
             </div>
-
-            {/* Popup zamówienia */}
-            <CheckoutPopup
-                show={showModal}
-                handleClose={() => setShowModal(false)}
-                cartItems={cart}
-                totalPrice={totalPrice}
-                onSuccess={onCheckoutSuccess} // Przekazujemy callback sukcesu
-            />
         </div>
     );
 };
