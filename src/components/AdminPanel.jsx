@@ -232,6 +232,8 @@ const AdminPanel = () => {
                                                     {user.role}
                                                 </span>
                                         </td>
+
+                                        {/* --- ZMIANA TUTAJ: Nowa logika statusów (Banned / Registered / Active) --- */}
                                         <td>
                                             {user.banned ? (
                                                 <div>
@@ -241,14 +243,20 @@ const AdminPanel = () => {
                                                     </div>
                                                     <div className="small text-muted fst-italic">"{user.banReason}"</div>
                                                 </div>
+                                            ) : !user.enabled ? (
+                                                // Jeśli user nie jest zbanowany, ale nie potwierdził maila
+                                                <span className="badge bg-warning text-dark border border-warning">Registered (Not Verified)</span>
                                             ) : (
+                                                // Jeśli wszystko OK
                                                 <span className="badge bg-success">Active</span>
                                             )}
                                         </td>
+                                        {/* ----------------------------------------------------------------------- */}
+
                                         <td className="text-end">
+                                            {/* ... przyciski akcji bez zmian ... */}
                                             {user.role !== "ROLE_ADMIN" && (
                                                 <div className="d-flex justify-content-end gap-2">
-                                                    {/* PRZYCISK BAN / UNBAN */}
                                                     {user.banned ? (
                                                         <button
                                                             className="btn btn-sm btn-outline-success"
@@ -264,14 +272,12 @@ const AdminPanel = () => {
                                                             onClick={() => {
                                                                 setBanningUserId(user.id);
                                                                 setBanDetails({ days: 0, reason: "" });
-                                                                window.scrollTo(0, 0); // Przewiń do formularza
+                                                                window.scrollTo(0, 0);
                                                             }}
                                                         >
                                                             <i className="bi bi-hammer"></i> Ban
                                                         </button>
                                                     )}
-
-                                                    {/* PRZYCISK DELETE */}
                                                     <button
                                                         className="btn btn-sm btn-outline-danger"
                                                         title="Delete User Permanently"

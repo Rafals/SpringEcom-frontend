@@ -17,6 +17,9 @@ import { ToastContainer } from "react-toastify";
 import Login from "./components/Login.jsx";
 import Checkout from "./components/Checkout.jsx";
 import AdminPanel from "./components/AdminPanel.jsx";
+import VerifyAccount from "./components/VerifyAccount.jsx";
+import UserProfile from "./components/UserProfile.jsx";
+import ForgotPassword from "./components/ForgotPassword.jsx";
 
 function App() {
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -26,36 +29,39 @@ function App() {
     console.log("Selected category:", category);
   };
 
-  return (
-    <AppProvider>
-      <BrowserRouter>
-        <ToastContainer autoClose={2000}
-          hideProgressBar={true} />
-        <Navbar onSelectCategory={handleCategorySelect} />
-        <div className="min-vh-100">
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <Home selectedCategory={selectedCategory} />
-              }
-            />
-            <Route path="/add_product" element={<AddProduct />} />
-            <Route path="/product" element={<Product />} />
-            <Route path="product/:id" element={<Product />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/product/update/:id" element={<UpdateProduct />} />
-            <Route path="/orders" element={<Order />} />
-            <Route path="/search-results" element={<SearchResults />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/admin" element={<AdminPanel />} />
+    return (
+        <AppProvider>
+            <BrowserRouter>
+                <ToastContainer autoClose={2000}
+                                hideProgressBar={true}/>
+                <Navbar onSelectCategory={handleCategorySelect}/>
+                <div className="min-vh-100">
+                    <Routes>
+                        <Route
+                            path="/"
+                            element={
+                                <Home selectedCategory={selectedCategory}/>
+                            }
+                        />
+                        <Route path="/add_product" element={<AddProduct/>}/>
+                        <Route path="/product" element={<Product/>}/>
+                        <Route path="product/:id" element={<Product/>}/>
+                        <Route path="/cart" element={<Cart/>}/>
+                        <Route path="/product/update/:id" element={<UpdateProduct/>}/>
+                        <Route path="/orders" element={<Order/>}/>
+                        <Route path="/search-results" element={<SearchResults/>}/>
+                        <Route path="/login" element={<Login/>}/>
+                        <Route path="/checkout" element={<Checkout/>}/>
+                        <Route path="/admin" element={<AdminPanel/>}/>
+                        <Route path="/verify" element={<VerifyAccount/>}/>
+                        <Route path="/profile" element={<UserProfile />} />
+                        <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          </Routes>
-        </div>
-      </BrowserRouter>
-    </AppProvider>
-  );
+                    </Routes>
+                </div>
+            </BrowserRouter>
+        </AppProvider>
+    );
 }
 
 export default App;

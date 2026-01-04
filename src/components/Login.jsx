@@ -54,21 +54,12 @@ const Login = () => {
         } catch (err) {
             console.error("Google Login Error:", err);
 
-            // --- TUTAJ JEST ZMIANA ---
-            // Sprawdzamy, czy backend przysłał odpowiedź z błędem
             if (err.response && err.response.data) {
-                // Spring Boot zazwyczaj zwraca komunikat w polu 'message' lub bezpośrednio w 'data'
-                // Jeśli wysyłasz String z backendu, może być w err.response.data
-                // Jeśli wysyłasz obiekt JSON, może być w err.response.data.message
                 const backendMessage = err.response.data.message || err.response.data;
-
-                // Ustawiamy ten komunikat jako błąd (np. "Twoje konto zostało zablokowane...")
                 setError(typeof backendMessage === 'string' ? backendMessage : JSON.stringify(backendMessage));
             } else {
-                // Jeśli to błąd sieci lub inny nieznany błąd
                 setError("Google login failed. Please try again.");
             }
-            // -------------------------
 
         } finally {
             setLoading(false);
@@ -120,9 +111,12 @@ const Login = () => {
                     localStorage.setItem("token", response.data.token);
                     localStorage.setItem("username", response.data.username);
                     localStorage.setItem("role", response.data.role);
+
+                    navigate("/");
+                    window.location.reload();
+                } else {
+                    navigate(`/verify?email=${formData.email}`);
                 }
-                navigate("/");
-                window.location.reload();
             }
         } catch (err) {
             setError(err.response?.data?.message || "Action failed. Please try again.");
@@ -179,6 +173,20 @@ const Login = () => {
                     <button type="submit" className="btn btn-primary w-100 mt-2 mb-3 py-2 fw-bold" disabled={loading}>
                         {loading ? <span className="spinner-border spinner-border-sm"></span> : (isLogin ? "Login" : "Sign Up")}
                     </button>
+
+                    {/* --- POPRAWIONA SEKCJA LINKU --- */}
+                    {isLogin && (
+                        <div className="d-flex justify-content-center mb-3">
+                            <button
+                                type="button"
+                                className="btn btn-link btn-sm p-0 text-decoration-none"
+                                onClick={() => navigate("/forgot-password")}
+                            >
+                                Forgot password?
+                            </button>
+                        </div>
+                    )}
+                    {/* ------------------------------- */}
                 </form>
 
                 <div className="d-flex align-items-center my-3">

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom"; // <--- TUTAJ BRAKOWAŁO "Link"
 import axios from "../axios";
-import AppContext from "../Context/Context"; // Import Contextu
+import AppContext from "../Context/Context";
 
 const Navbar = ({ onSelectCategory }) => {
     // 1. Używamy globalnego stanu motywu
@@ -22,8 +22,6 @@ const Navbar = ({ onSelectCategory }) => {
     const navbarRef = useRef(null);
     const navigate = useNavigate();
     const baseUrl = import.meta.env.VITE_BASE_URL;
-
-    // Usunąłem lokalny useEffect do data-bs-theme (jest teraz w Context.jsx)
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -55,6 +53,10 @@ const Navbar = ({ onSelectCategory }) => {
             if (navbarRef.current && !navbarRef.current.contains(event.target)) {
                 setIsNavCollapsed(true);
             }
+            // Zamykanie dropdownu profilu przy kliknięciu poza
+            if (!event.target.closest('.dropdown')) {
+                setShowProfileDropdown(false);
+            }
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -64,10 +66,14 @@ const Navbar = ({ onSelectCategory }) => {
     const handleLinkClick = () => {
         setIsNavCollapsed(true);
         setShowSuggestions(false);
+        setShowProfileDropdown(false);
     };
 
     const handleLogout = () => {
-        localStorage.clear();
+        localStorage.removeItem("token");
+        localStorage.removeItem("username");
+        localStorage.removeItem("role");
+
         handleLinkClick();
         navigate("/login");
         window.location.reload();
@@ -92,7 +98,6 @@ const Navbar = ({ onSelectCategory }) => {
     };
 
     return (
-        // bg-body-tertiary automatycznie dopasuje kolor paska (jasny szary lub ciemny szary)
         <nav className="navbar navbar-expand-lg fixed-top bg-body-tertiary shadow-sm" ref={navbarRef}>
             <div className="container-fluid">
                 <a className="navbar-brand fw-bold" href="https://github.com/rafals">
@@ -126,10 +131,10 @@ const Navbar = ({ onSelectCategory }) => {
                     </ul>
 
                     <div className="d-flex align-items-center">
-                        {/* 2. Przycisk zmiany motywu */}
+                        {/* Przycisk zmiany motywu */}
                         <button className="btn btn-link nav-link me-2" onClick={toggleTheme}>
                             {theme === "light" ?
-                                <i className="bi bi-moon-stars-fill"></i> :  // Usunąłem text-dark!
+                                <i className="bi bi-moon-stars-fill"></i> :
                                 <i className="bi bi-sun-fill text-warning"></i>
                             }
                         </button>
@@ -139,12 +144,28 @@ const Navbar = ({ onSelectCategory }) => {
                                 <button
                                     className={`btn btn-outline-primary dropdown-toggle d-flex align-items-center ${showProfileDropdown ? 'show' : ''}`}
                                     type="button"
-                                    onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowProfileDropdown(!showProfileDropdown);
+                                    }}
                                 >
                                     <i className="bi bi-person-circle me-1"></i> {username}
                                 </button>
                                 <ul className={`dropdown-menu dropdown-menu-end shadow border-0 mt-2 ${showProfileDropdown ? 'show' : ''}`}
                                     style={{ display: showProfileDropdown ? 'block' : 'none', position: 'absolute', right: 0 }}>
+
+                                    <li>
+                                        <Link
+                                            className="dropdown-item"
+                                            to="/profile"
+                                            onClick={handleLinkClick}
+                                        >
+                                            <i className="bi bi-person-gear me-2"></i> Profile
+                                        </Link>
+                                    </li>
+
+                                    <li><hr className="dropdown-divider" /></li>
+
                                     <li>
                                         <button className="dropdown-item text-danger fw-bold" onClick={handleLogout}>
                                             <i className="bi bi-box-arrow-right me-2"></i> Logout
@@ -158,7 +179,6 @@ const Navbar = ({ onSelectCategory }) => {
                             </button>
                         )}
 
-                        {/* 3. Link Cart - usunięte "text-dark"! Teraz kolor dobierze się sam */}
                         <a href="/cart" className="nav-link me-3" onClick={handleLinkClick}>
                             <i className="bi bi-cart me-1"></i> Cart
                         </a>
@@ -172,7 +192,6 @@ const Navbar = ({ onSelectCategory }) => {
                                 onChange={(e) => setInput(e.target.value)}
                                 onFocus={() => input.length > 1 && setShowSuggestions(true)}
                             />
-                            {/* Sugestie zostawiamy bez zmian - list-group jest responsywne */}
                             {showSuggestions && suggestions.length > 0 && (
                                 <div className="list-group position-absolute w-100 shadow-lg" style={{ top: "100%", zIndex: 1100, marginTop: "5px" }}>
                                     {suggestions.slice(0, 5).map((product) => (
