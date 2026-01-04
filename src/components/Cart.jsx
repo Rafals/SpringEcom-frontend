@@ -5,12 +5,10 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
 const Cart = () => {
-    // Wyciągamy niezbędne funkcje z Contextu
     const { cart, addToCart, removeFromCart } = useContext(AppContext);
     const [totalPrice, setTotalPrice] = useState(0);
     const navigate = useNavigate();
 
-    // Kalkulacja sumy za każdym razem, gdy koszyk w Contextie się zmieni
     useEffect(() => {
         const total = cart.reduce(
             (acc, item) => acc + item.price * item.quantity,
@@ -19,7 +17,6 @@ const Cart = () => {
         setTotalPrice(total);
     }, [cart]);
 
-    // Funkcja pomocnicza do wyświetlania zdjęć Base64
     const convertBase64ToDataURL = (base64String, mimeType = 'image/jpeg') => {
         if (!base64String) return "/fallback-image.jpg";
         if (base64String.startsWith("data:") || base64String.startsWith("http")) {
@@ -28,7 +25,6 @@ const Cart = () => {
         return `data:${mimeType};base64,${base64String}`;
     };
 
-    // Zwiększanie ilości - wysyła zapytanie do bazy przez Context
     const handleIncreaseQuantity = (item) => {
         if (item.quantity < item.stockQuantity) {
             addToCart(item, 1);
@@ -37,7 +33,6 @@ const Cart = () => {
         }
     };
 
-    // Zmniejszanie ilości - wysyła zapytanie do bazy przez Context
     const handleDecreaseQuantity = (item) => {
         if (item.quantity > 1) {
             addToCart(item, -1);
@@ -50,7 +45,6 @@ const Cart = () => {
         }
     };
 
-    // Funkcja kierująca do nowej strony Checkout zamiast otwierania popupu
     const handleGoToCheckout = () => {
         if (cart.length === 0) {
             toast.warn("Your cart is empty!");
@@ -64,6 +58,7 @@ const Cart = () => {
             <div className="row justify-content-center">
                 <div className="col-md-10">
                     <div className="card shadow border-0">
+                        {/* Zmieniono bg-primary na gradient lub zostawiono, ale tekst biały jest OK */}
                         <div className="card-header bg-primary text-white py-3">
                             <h4 className="mb-0"><i className="bi bi-cart3 me-2"></i>Your Shopping Cart</h4>
                         </div>
@@ -81,7 +76,8 @@ const Cart = () => {
                                 <>
                                     <div className="table-responsive">
                                         <table className="table table-hover align-middle">
-                                            <thead className="table-light">
+                                            {/* USUNIĘTO table-light, teraz nagłówek dopasuje się do motywu */}
+                                            <thead>
                                             <tr>
                                                 <th>Product</th>
                                                 <th className="text-center">Price</th>
@@ -116,7 +112,8 @@ const Cart = () => {
                                                                 <button className="btn btn-outline-secondary" onClick={() => handleDecreaseQuantity(item)}>
                                                                     <i className="bi bi-dash"></i>
                                                                 </button>
-                                                                <input type="text" className="form-control text-center bg-white" value={item.quantity} readOnly />
+                                                                {/* USUNIĘTO bg-white z inputa */}
+                                                                <input type="text" className="form-control text-center" value={item.quantity} readOnly />
                                                                 <button className="btn btn-outline-secondary" onClick={() => handleIncreaseQuantity(item)}>
                                                                     <i className="bi bi-plus"></i>
                                                                 </button>
@@ -137,7 +134,8 @@ const Cart = () => {
                                         </table>
                                     </div>
 
-                                    <div className="d-flex justify-content-between align-items-center mt-4 p-3 bg-light rounded">
+                                    {/* ZMIANA: bg-light -> bg-body-tertiary (szary w dzień, ciemny szary w nocy) */}
+                                    <div className="d-flex justify-content-between align-items-center mt-4 p-3 bg-body-tertiary rounded">
                                         <h5 className="mb-0 fw-bold">Grand Total:</h5>
                                         <h4 className="mb-0 text-primary fw-bold">$ {totalPrice.toFixed(2)}</h4>
                                     </div>
@@ -147,7 +145,7 @@ const Cart = () => {
                                             variant="primary"
                                             size="lg"
                                             className="fw-bold py-3"
-                                            onClick={handleGoToCheckout} // Nawigacja do /checkout
+                                            onClick={handleGoToCheckout}
                                         >
                                             Proceed to Checkout
                                         </Button>

@@ -8,20 +8,36 @@ const AppContext = createContext({
     addToCart: (product) => {},
     removeFromCart: (productId) => {},
     refreshData: () => {},
-    fetchCart: () => {}, // Nowa funkcja w interfejsie
-    clearCart: () => {}
+    fetchCart: () => {},
+    clearCart: () => {},
+    theme: "light",        // Nowe pole
+    toggleTheme: () => {}  // Nowa funkcja
 });
 
 export const AppProvider = ({ children }) => {
     const [data, setData] = useState([]);
     const [isError, setIsError] = useState("");
     const [cart, setCart] = useState([]);
+
+    // --- NOWA LOGIKA MOTYWU ---
+    // Pobieramy motyw z localStorage lub domyślnie 'light'
+    const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
+
+    // Ten useEffect automatycznie zmienia kolory całej strony (Bootstrap 5.3)
+    useEffect(() => {
+        document.documentElement.setAttribute("data-bs-theme", theme);
+        localStorage.setItem("theme", theme);
+    }, [theme]);
+
+    const toggleTheme = () => {
+        setTheme((prev) => (prev === "light" ? "dark" : "light"));
+    };
+    // ---------------------------
+
     const baseUrl = import.meta.env.VITE_BASE_URL;
     const token = localStorage.getItem("token");
 
-    // Pobieranie koszyka z backendu
     const fetchCart = useCallback(async () => {
-        // Zawsze pobieraj aktualny token z localStorage
         const currentToken = localStorage.getItem("token");
         if (!currentToken || currentToken === "null") {
             setCart([]);
@@ -41,7 +57,6 @@ export const AppProvider = ({ children }) => {
         }
     }, [baseUrl]);
 
-    // Funkcja odświeżająca dane produktów
     const refreshData = async () => {
         try {
             const response = await axios.get(`${baseUrl}/api/products`);
@@ -51,14 +66,11 @@ export const AppProvider = ({ children }) => {
         }
     };
 
-    // Lokalna funkcja dodawania (opcjonalna, jeśli backend obsłuży wszystko)
     const addToCart = async (product, quantity = 1) => {
-        const currentToken = localStorage.getItem("token"); // Pobierz świeży token
+        const currentToken = localStorage.getItem("token");
         if (!currentToken || currentToken === "null") {
-            toast.error("Please login first");
             return;
         }
-
         try {
             await axios.post(`${baseUrl}/api/cart/add/${product.id}?quantity=${quantity}`, {}, {
                 headers: { Authorization: `Bearer ${currentToken}` }
@@ -75,7 +87,7 @@ export const AppProvider = ({ children }) => {
             await axios.delete(`${baseUrl}/api/cart/remove/${productId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            await fetchCart(); // Odświeżamy stan po usunięciu
+            await fetchCart();
         } catch (error) {
             console.error("Error removing from cart:", error);
         }
@@ -85,7 +97,6 @@ export const AppProvider = ({ children }) => {
         setCart([]);
     };
 
-    // Ładowanie danych przy starcie
     useEffect(() => {
         refreshData();
         if (token) {
@@ -101,8 +112,10 @@ export const AppProvider = ({ children }) => {
             addToCart,
             removeFromCart,
             refreshData,
-            fetchCart, // Udostępniamy fetchCart komponentom
-            clearCart
+            fetchCart,
+            clearCart,
+            theme,        // Eksportujemy
+            toggleTheme   // Eksportujemy
         }}>
             {children}
         </AppContext.Provider>

@@ -1,39 +1,29 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../axios";
+import AppContext from "../Context/Context"; // Import Contextu
 
 const Navbar = ({ onSelectCategory }) => {
-    const getInitialTheme = () => {
-        const storedTheme = localStorage.getItem("theme");
-        return storedTheme ? storedTheme : "light";
-    };
+    // 1. Używamy globalnego stanu motywu
+    const { theme, toggleTheme } = useContext(AppContext);
 
-    // Pobieranie danych autoryzacji z localStorage
     const token = localStorage.getItem("token");
     const username = localStorage.getItem("username");
     const role = localStorage.getItem("role");
 
-    const [theme, setTheme] = useState(getInitialTheme());
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [isNavCollapsed, setIsNavCollapsed] = useState(true);
-    const [showNoProductsMessage, setShowNoProductsMessage] = useState(false);
-
     const [suggestions, setSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
     const searchContainerRef = useRef(null);
     const navbarRef = useRef(null);
     const navigate = useNavigate();
     const baseUrl = import.meta.env.VITE_BASE_URL;
 
-    const [showProfileDropdown, setShowProfileDropdown] = useState(false);
-
-    useEffect(() => {
-        document.documentElement.setAttribute("data-bs-theme", theme);
-        localStorage.setItem("theme", theme);
-        document.body.className = theme === "light" ? "light-theme" : "dark-theme";
-    }, [theme]);
+    // Usunąłem lokalny useEffect do data-bs-theme (jest teraz w Context.jsx)
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -76,15 +66,11 @@ const Navbar = ({ onSelectCategory }) => {
         setShowSuggestions(false);
     };
 
-    const toggleTheme = () => {
-        setTheme(prev => (prev === "light" ? "dark" : "light"));
-    };
-
     const handleLogout = () => {
         localStorage.clear();
         handleLinkClick();
         navigate("/login");
-        window.location.reload(); // Odświeżenie stanu aplikacji
+        window.location.reload();
     };
 
     const handleSubmit = async (e) => {
@@ -100,13 +86,13 @@ const Navbar = ({ onSelectCategory }) => {
             navigate(`/search-results`, { state: { searchData: response.data } });
         } catch (error) {
             console.error("Error searching:", error);
-            setShowNoProductsMessage(true);
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
+        // bg-body-tertiary automatycznie dopasuje kolor paska (jasny szary lub ciemny szary)
         <nav className="navbar navbar-expand-lg fixed-top bg-body-tertiary shadow-sm" ref={navbarRef}>
             <div className="container-fluid">
                 <a className="navbar-brand fw-bold" href="https://github.com/rafals">
@@ -122,15 +108,16 @@ const Navbar = ({ onSelectCategory }) => {
                         <li className="nav-item">
                             <a className="nav-link" href="/" onClick={handleLinkClick}>Home</a>
                         </li>
-
-                        {/* GUZIK DLA ADMINA */}
                         {role === "ROLE_ADMIN" && (
-                            <li className="nav-item">
-                                <a className="nav-link" href="/add_product" onClick={handleLinkClick}>Add Product</a>
-                            </li>
+                            <>
+                                <li className="nav-item">
+                                    <a className="nav-link" href="/admin" onClick={handleLinkClick}>Admin Panel</a>
+                                </li>
+                                <li className="nav-item">
+                                    <a className="nav-link" href="/add_product" onClick={handleLinkClick}>Add Product</a>
+                                </li>
+                            </>
                         )}
-
-                        {/* ORDERS DLA ZALOGOWANYCH */}
                         {token && (
                             <li className="nav-item">
                                 <a className="nav-link" href="/orders" onClick={handleLinkClick}>Orders</a>
@@ -139,30 +126,25 @@ const Navbar = ({ onSelectCategory }) => {
                     </ul>
 
                     <div className="d-flex align-items-center">
-                        {/* Theme Toggle */}
+                        {/* 2. Przycisk zmiany motywu */}
                         <button className="btn btn-link nav-link me-2" onClick={toggleTheme}>
-                            {theme === "light" ? <i className="bi bi-moon-stars-fill text-dark"></i> : <i className="bi bi-sun-fill text-warning"></i>}
+                            {theme === "light" ?
+                                <i className="bi bi-moon-stars-fill"></i> :  // Usunąłem text-dark!
+                                <i className="bi bi-sun-fill text-warning"></i>
+                            }
                         </button>
 
-                        {/* DYNAMICZNA SEKCJA LOGOWANIA */}
                         {token ? (
                             <div className="dropdown me-3">
                                 <button
                                     className={`btn btn-outline-primary dropdown-toggle d-flex align-items-center ${showProfileDropdown ? 'show' : ''}`}
                                     type="button"
-                                    onClick={() => setShowProfileDropdown(!showProfileDropdown)} // Przełączanie menu
+                                    onClick={() => setShowProfileDropdown(!showProfileDropdown)}
                                 >
                                     <i className="bi bi-person-circle me-1"></i> {username}
                                 </button>
-
-                                {/* Menu rozwijane sterowane przez Reacta */}
                                 <ul className={`dropdown-menu dropdown-menu-end shadow border-0 mt-2 ${showProfileDropdown ? 'show' : ''}`}
-                                    style={{
-                                        display: showProfileDropdown ? 'block' : 'none', // Wymuszamy widoczność
-                                        position: 'absolute',
-                                        right: 0
-                                    }}
-                                >
+                                    style={{ display: showProfileDropdown ? 'block' : 'none', position: 'absolute', right: 0 }}>
                                     <li>
                                         <button className="dropdown-item text-danger fw-bold" onClick={handleLogout}>
                                             <i className="bi bi-box-arrow-right me-2"></i> Logout
@@ -176,7 +158,8 @@ const Navbar = ({ onSelectCategory }) => {
                             </button>
                         )}
 
-                        <a href="/cart" className="nav-link text-dark me-3" onClick={handleLinkClick}>
+                        {/* 3. Link Cart - usunięte "text-dark"! Teraz kolor dobierze się sam */}
+                        <a href="/cart" className="nav-link me-3" onClick={handleLinkClick}>
                             <i className="bi bi-cart me-1"></i> Cart
                         </a>
 
@@ -189,7 +172,7 @@ const Navbar = ({ onSelectCategory }) => {
                                 onChange={(e) => setInput(e.target.value)}
                                 onFocus={() => input.length > 1 && setShowSuggestions(true)}
                             />
-
+                            {/* Sugestie zostawiamy bez zmian - list-group jest responsywne */}
                             {showSuggestions && suggestions.length > 0 && (
                                 <div className="list-group position-absolute w-100 shadow-lg" style={{ top: "100%", zIndex: 1100, marginTop: "5px" }}>
                                     {suggestions.slice(0, 5).map((product) => (
@@ -214,7 +197,6 @@ const Navbar = ({ onSelectCategory }) => {
                                             ) : (
                                                 <i className="bi bi-image me-2 text-muted" style={{ fontSize: "1.5rem" }}></i>
                                             )}
-
                                             <div className="text-truncate">
                                                 <span className="fw-bold small d-block text-truncate">{product.name}</span>
                                                 <span className="text-primary small">${product.price}</span>
@@ -223,7 +205,6 @@ const Navbar = ({ onSelectCategory }) => {
                                     ))}
                                 </div>
                             )}
-
                             <button className="btn btn-outline-success" type="submit" disabled={isLoading}>
                                 {isLoading ? <span className="spinner-border spinner-border-sm"></span> : "Search"}
                             </button>

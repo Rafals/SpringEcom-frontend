@@ -1,4 +1,3 @@
-// KLUCZOWA ZMIANA: Importuj Twoją instancję, a nie bibliotekę!
 import axios from "../axios";
 import React, { useEffect, useState } from 'react';
 
@@ -11,14 +10,11 @@ const Order = () => {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                // Używamy krótkiej ścieżki (axios.js doda http://localhost:8080/api)
-                // I co najważniejsze: DODA TOKEN DO NAGŁÓWKA!
                 const response = await axios.get("/orders");
                 setOrders(response.data);
                 setLoading(false);
             } catch (error) {
                 console.error("Order fetch error:", error);
-                // Obsługa błędu 401/403 (wygasły token)
                 if (error.response && (error.response.status === 401 || error.response.status === 403)) {
                     setError("Session expired. Please login again.");
                 } else {
@@ -42,7 +38,7 @@ const Order = () => {
     const getStatusClass = (status) => {
         switch (status) {
             case 'PLACED': return 'bg-info text-dark';
-            case 'PAID': return 'bg-warning text-dark'; // Dodaj obsługę statusu PAID
+            case 'PAID': return 'bg-warning text-dark';
             case 'SHIPPED': return 'bg-primary';
             case 'DELIVERED': return 'bg-success';
             case 'CANCELLED': return 'bg-danger';
@@ -51,7 +47,7 @@ const Order = () => {
     };
 
     const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-IN', {
+        return new Intl.NumberFormat('en-US', { // Zmieniłem en-IN na en-US dla dolarów
             style: 'currency',
             currency: 'USD',
             maximumFractionDigits: 2
@@ -90,7 +86,8 @@ const Order = () => {
                 <div className="card-body p-0">
                     <div className="table-responsive">
                         <table className="table table-hover mb-0 align-middle">
-                            <thead className="table-light">
+                            {/* USUNIĘTO table-light */}
+                            <thead>
                             <tr>
                                 <th>Order ID</th>
                                 <th>Customer</th>
@@ -120,9 +117,9 @@ const Order = () => {
                                             </td>
                                             <td>{new Date(order.orderDate).toLocaleDateString()}</td>
                                             <td>
-                          <span className={`badge ${getStatusClass(order.status)}`}>
-                            {order.status}
-                          </span>
+                                                <span className={`badge ${getStatusClass(order.status)}`}>
+                                                    {order.status}
+                                                </span>
                                             </td>
                                             <td>{order.items.length}</td>
                                             <td className="fw-bold">{formatCurrency(calculateOrderTotal(order.items))}</td>
@@ -135,11 +132,13 @@ const Order = () => {
                                                 </button>
                                             </td>
                                         </tr>
+                                        {/* ZMIANA: bg-light -> bg-body-tertiary */}
                                         {expandedOrder === order.orderId && (
-                                            <tr className="bg-light">
+                                            <tr className="bg-body-tertiary">
                                                 <td colSpan="7" className="p-4">
                                                     <h6 className="mb-3 fw-bold">Items in this order:</h6>
-                                                    <table className="table table-sm table-bordered bg-white">
+                                                    {/* USUNIĘTO bg-white */}
+                                                    <table className="table table-sm table-bordered">
                                                         <thead>
                                                         <tr>
                                                             <th>Product</th>

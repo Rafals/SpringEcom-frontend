@@ -20,7 +20,7 @@ const Login = () => {
     const recaptchaRef = useRef();
 
     // Pamiętaj: To musi być klucz typu "Checkbox" (v2), a nie "Score" (v3)
-    const recaptchaSiteKey = "6LefSj8sAAAAAI91pZgzDalA1ZDAOmPvyT0rzliU";
+    const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -53,7 +53,23 @@ const Login = () => {
             }
         } catch (err) {
             console.error("Google Login Error:", err);
-            setError("Google login failed. Please try again.");
+
+            // --- TUTAJ JEST ZMIANA ---
+            // Sprawdzamy, czy backend przysłał odpowiedź z błędem
+            if (err.response && err.response.data) {
+                // Spring Boot zazwyczaj zwraca komunikat w polu 'message' lub bezpośrednio w 'data'
+                // Jeśli wysyłasz String z backendu, może być w err.response.data
+                // Jeśli wysyłasz obiekt JSON, może być w err.response.data.message
+                const backendMessage = err.response.data.message || err.response.data;
+
+                // Ustawiamy ten komunikat jako błąd (np. "Twoje konto zostało zablokowane...")
+                setError(typeof backendMessage === 'string' ? backendMessage : JSON.stringify(backendMessage));
+            } else {
+                // Jeśli to błąd sieci lub inny nieznany błąd
+                setError("Google login failed. Please try again.");
+            }
+            // -------------------------
+
         } finally {
             setLoading(false);
         }

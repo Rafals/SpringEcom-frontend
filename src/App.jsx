@@ -16,6 +16,7 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { ToastContainer } from "react-toastify";
 import Login from "./components/Login.jsx";
 import Checkout from "./components/Checkout.jsx";
+import AdminPanel from "./components/AdminPanel.jsx";
 
 function App() {
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -31,7 +32,7 @@ function App() {
         <ToastContainer autoClose={2000}
           hideProgressBar={true} />
         <Navbar onSelectCategory={handleCategorySelect} />
-        <div className="min-vh-100 bg-light">
+        <div className="min-vh-100">
           <Routes>
             <Route
               path="/"
@@ -48,6 +49,7 @@ function App() {
             <Route path="/search-results" element={<SearchResults />} />
               <Route path="/login" element={<Login />} />
               <Route path="/checkout" element={<Checkout />} />
+              <Route path="/admin" element={<AdminPanel />} />
 
           </Routes>
         </div>
